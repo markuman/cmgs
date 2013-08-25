@@ -3,6 +3,11 @@ mygithub
 
 mygithub helps you to clone and keep sync all you own repositories and all your stared repositories.
 
+- Version 4
+ * remove cat dependency
+ * fix bug while extracting own repositories
+ * verbose remove tmpdir
+
 - Version 3
  * rename cmgs to mygithub
  * clone/pull stars and own github repositories

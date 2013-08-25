@@ -1,5 +1,10 @@
 #!/bin/bash
 #
+# Version 4
+# - remove cat dependency
+# - fix bug while extracting own repositories
+# - verbose remove tmpdir
+#
 # Version 3
 # - rename cmgs to mygithub
 # - clone/pull stars and own github repositories
@@ -12,7 +17,7 @@
 #  - initial release
 #
 #
-# REQUIREMENTS: wget, grep, cat, cut, git, sed
+# REQUIREMENTS: wget, grep, cut, git, sed
 #
 # USAGE
 #
@@ -52,8 +57,8 @@ else
 
 	# extract only the repo urls
 	grep "<h3>" $tmpdir/index.html > $tmpdir/gits.raw
-	sed -n "/<h3/,/h3>/"p $tmpdir/markuman\?tab\=repositories >> $tmpdir/gits.raw
-	cat $tmpdir/gits.raw | grep -o -E 'href="([^"#]+)"' | cut -d'"' -f2 > $tmpdir/gits.url
+	sed -n "/<h3 class=\"repolist-name\">/,/h3>/"p $tmpdir/$githubuser\?tab\=repositories >> $tmpdir/gits.raw
+	grep -o -E 'href="([^"#]+)"' $tmpdir/gits.raw | cut -d'"' -f2 > $tmpdir/gits.url
 
 	filename=$tmpdir/gits.url
 	while read -r line
@@ -73,5 +78,8 @@ else
 	done < "$filename"
 
 	# delete tmpdir
+	echo "deleting tmpdir $tmpdir"
 	rm -r $tmpdir
+
+	echo "everything is done!"
 fi
