@@ -6,7 +6,6 @@ mygithub helps you to clone and keep sync all you own repositories and all your 
 - Version 4
  * remove cat dependency
  * fix bug while extracting own repositories
- * verbose remove tmpdir
 
 - Version 3
  * rename cmgs to mygithub
@@ -21,7 +20,7 @@ mygithub helps you to clone and keep sync all you own repositories and all your 
 
 
 # REQUIREMENTS
- wget, grep, cat, cut, git, sed
+ wget, grep, cut, git, sed
 
 # USAGE
 

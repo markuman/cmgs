@@ -78,8 +78,5 @@ else
 	done < "$filename"
 
 	# delete tmpdir
-	echo "deleting tmpdir $tmpdir"
 	rm -r $tmpdir
-
-	echo "everything is done!"
 fi
