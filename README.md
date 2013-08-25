@@ -3,11 +3,6 @@ mygithub
 
 mygithub helps you to clone and keep sync all you own repositories and all your stared repositories.
 
-Version 1
-* initial setup
-
-keep sync and backup all you favourite project at once. better safe than sorry ;)
-
 - Version 3
  * rename cmgs to mygithub
  * clone/pull stars and own github repositories
@@ -20,7 +15,8 @@ keep sync and backup all you favourite project at once. better safe than sorry ;
  * initial release
 
 
-# REQUIREMENTS: wget, grep, cat, cut, git, sed
+# REQUIREMENTS
+ wget, grep, cat, cut, git, sed
 
 # USAGE
 
