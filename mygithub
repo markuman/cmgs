@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# Version 3
+# - rename cmgs to mygithub
+# - clone/pull stars and own github repositories
+# - mkdir -p for destination dir
+#
+# Version 2
+#  - implement pull if repository already exist
+#
+# Version 1
+#  - initial release
+#
+#
+# REQUIREMENTS: wget, grep, cat, cut, git, sed
+#
+# USAGE
+#
+#	$ chmod u+x mygithub
+#	$ ./mygithub markuman myGITHUBfavs
+#	...
+#	$ ls myGITHUBfavs/
+#	aeolianine  arasbm  dac922     devsnd  elecay    hoytech     kaosat-dev  lukasepple  silentbicycle  stetro    waalt    yexiaobo-seeedstudio
+#	alabid      bartaz  dantswain  Dmytry  fguillot  irungentoo  kcuzner     priyadi     sn0opy         thliebig  xmarcux  yui
+#
+
+
+if (("$#" < 2)); then
+	echo -e "Error: At least 2 arguments are needed. Your Github-Username and a destination dir.\n"
+elif (("$#" > 2)); then
+	echo -e "Error: Too much input arguments. Just 2 are needed. Github-Username and a destination dir.\n"
+else
+
+	# where am i?
+	currentdir=$(pwd)
+	# create temporary dir
+	tmpdir=$(mktemp -d)
+
+	# username + destination dir.
+	githubuser=$1
+	destdir=$2
+
+	# destdir check
+	if [ ! -d $destdir ]; then
+		mkdir -p $destdir
+	fi
+
+	echo "Using tmpdir $tmpdir"
+	# get the source...
+	wget -qP $tmpdir https://github.com/stars/$githubuser/
+	wget -qP $tmpdir https://github.com/$githubuser?tab=repositories
+
+	# extract only the repo urls
+	grep "<h3>" $tmpdir/index.html > $tmpdir/gits.raw
+	sed -n "/<h3/,/h3>/"p $tmpdir/markuman\?tab\=repositories >> $tmpdir/gits.raw
+	cat $tmpdir/gits.raw | grep -o -E 'href="([^"#]+)"' | cut -d'"' -f2 > $tmpdir/gits.url
+
+	filename=$tmpdir/gits.url
+	while read -r line
+	do
+	    name=$line
+
+	    # if github repository folder don't exist -> clone
+	    if [ ! -d $destdir$name ]; then
+   	    	echo -e "\n\n Start cloning $name \n"
+	    	git clone https://github.com$name.git $destdir$name
+	    # if folder already exist -> pull
+	    else 
+		echo -e "\n\n Pull $name \n"
+		cd $destdir$name && git pull
+		cd $currentdir
+	    fi
+	done < "$filename"
+
+	# delete tmpdir
+	rm -r $tmpdir
+fi
