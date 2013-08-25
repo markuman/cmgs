@@ -1,6 +1,10 @@
 #!/bin/bash
 #
+# Version 2
+#  - implement pull if repository already exist
+#
 # Version 1
+#  - initial release
 #
 # cmgs - clone my github stars!
 #
@@ -23,6 +27,9 @@ if (("$#" < 2)); then
 elif (("$#" > 2)); then
 	echo -e "Error: Too much input arguments. Just 2 are needed. Github-Username and a destination dir.\n"
 else
+
+	# where am i?
+	currentdir=$(pwd)
 	# create temporary dir
 	tmpdir=$(mktemp -d)
 
@@ -30,8 +37,7 @@ else
 	githubuser=$1
 	destdir=$2
 
-	echo "Using tmpdir"
-	echo $tmpdir
+	echo "Using tmpdir $tmpdir"
 	wget -qP $tmpdir https://github.com/stars/$githubuser/
 
 	grep "<h3>" $tmpdir/index.html > $tmpdir/stars.raw
@@ -41,8 +47,15 @@ else
 	while read -r line
 	do
 	    name=$line
-	    echo -e "\n\n Start cloning $name \n"
-	    git clone https://github.com$name.git $destdir$name
+
+	    if [ ! -d $destdir$name ]; then
+   	    	echo -e "\n\n Start cloning $name \n"
+	    	git clone https://github.com$name.git $destdir$name
+	    else 
+		echo -e "\n\n Pull $name \n"
+		cd $destdir$name && git pull
+		cd $currentdir
+	    fi
 	done < "$filename"
 
 	rm -r $tmpdir
