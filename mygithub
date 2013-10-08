@@ -1,5 +1,10 @@
 #!/bin/bash
 #
+# Version 5
+# - support mirroring only repositories from given username
+# e.g. $ ./mygithub markuman /mnt/GITHUB/ justme
+# it's a weak implementation, because it doesn't matter what kind of string the third option is!
+#
 # Version 4
 # - remove cat dependency
 # - fix bug while extracting own repositories
@@ -28,14 +33,15 @@
 #	aeolianine  arasbm  dac922     devsnd  elecay    hoytech     kaosat-dev  lukasepple  silentbicycle  stetro    waalt    yexiaobo-seeedstudio
 #	alabid      bartaz  dantswain  Dmytry  fguillot  irungentoo  kcuzner     priyadi     sn0opy         thliebig  xmarcux  yui
 #
+#	$ ./mygithub markuman /srv/http/viewgit/my-github-mirror/ justme
+#
 
 
 if (("$#" < 2)); then
 	echo -e "Error: At least 2 arguments are needed. Your Github-Username and a destination dir.\n"
-elif (("$#" > 2)); then
+elif (("$#" > 3)); then
 	echo -e "Error: Too much input arguments. Just 2 are needed. Github-Username and a destination dir.\n"
-else
-
+elif (("$#" == 2)); then
 	# where am i?
 	currentdir=$(pwd)
 	# create temporary dir
@@ -58,6 +64,51 @@ else
 	# extract only the repo urls
 	grep "<h3>" $tmpdir/index.html > $tmpdir/gits.raw
 	sed -n "/<h3 class=\"repolist-name\">/,/h3>/"p $tmpdir/$githubuser\?tab\=repositories >> $tmpdir/gits.raw
+	grep -o -E 'href="([^"#]+)"' $tmpdir/gits.raw | cut -d'"' -f2 > $tmpdir/gits.url
+
+	filename=$tmpdir/gits.url
+	while read -r line
+	do
+	    name=$line
+
+	    # if github repository folder don't exist -> clone
+	    if [ ! -d $destdir$name ]; then
+   	    	echo -e "\n\n Start cloning $name \n"
+	    	git clone https://github.com$name.git $destdir$name
+	    # if folder already exist -> pull
+	    else 
+		echo -e "\n\n Pull $name \n"
+		cd $destdir$name && git pull
+		cd $currentdir
+	    fi
+	done < "$filename"
+
+	# delete tmpdir
+	rm -r $tmpdir
+	
+# mygithub markuman destination/dir/ mirror
+# add least, it doesn't matter what string the third option is! :)
+elif (("$#" == 3)); then
+	# where am i?
+	currentdir=$(pwd)
+	# create temporary dir
+	tmpdir=$(mktemp -d)
+
+	# username + destination dir.
+	githubuser=$1
+	destdir=$2
+
+	# destdir check
+	if [ ! -d $destdir ]; then
+		mkdir -p $destdir
+	fi
+
+	echo "Using tmpdir $tmpdir"
+	# get the source...
+	wget -qP $tmpdir https://github.com/$githubuser?tab=repositories
+
+	# extract only the repo urls
+	sed -n "/<h3 class=\"repolist-name\">/,/h3>/"p $tmpdir/$githubuser\?tab\=repositories > $tmpdir/gits.raw
 	grep -o -E 'href="([^"#]+)"' $tmpdir/gits.raw | cut -d'"' -f2 > $tmpdir/gits.url
 
 	filename=$tmpdir/gits.url
