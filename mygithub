@@ -1,5 +1,8 @@
 #!/bin/bash
 #
+# Version 7
+# - clone -recursive by default
+#
 # Verion 6
 # - improve third option input.
 #   it's set now to "justme".
@@ -89,7 +92,7 @@ else
 	    # if github repository folder don't exist -> clone
 	    if [ ! -d $destdir$name ]; then
    	    	echo -e "\n\n Start cloning $name \n"
-	    	git clone https://github.com$name.git $destdir$name
+	    	git clone --recursive https://github.com$name.git $destdir$name
 	    # if folder already exist -> pull
 	    else 
 		echo -e "\n\n Pull $name \n"
