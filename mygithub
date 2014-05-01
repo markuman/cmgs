@@ -1,36 +1,6 @@
 #!/bin/bash
 #
-# Version 8
-# - MAC OS compatible mktemp -dt option
-#
-# Version 7
-# - clone -recursive by default
-#
-# Verion 6
-# - improve third option input.
-#   it's set now to "justme".
-#
-# Version 5
-# - support mirroring only repositories from given username
-# e.g. $ ./mygithub markuman /mnt/GITHUB/ justme
-# it's a weak implementation, because it doesn't matter what kind of string the third option is!
-#
-# Version 4
-# - remove cat dependency
-# - fix bug while extracting own repositories
-# - verbose remove tmpdir
-#
-# Version 3
-# - rename cmgs to mygithub
-# - clone/pull stars and own github repositories
-# - mkdir -p for destination dir
-#
-# Version 2
-#  - implement pull if repository already exist
-#
-# Version 1
-#  - initial release
-#
+# Version 9 - https://github.com/markuman/mygithub
 #
 # REQUIREMENTS: wget, grep, cut, git, sed
 #
@@ -39,7 +9,7 @@
 #	$ chmod u+x mygithub
 #	$ ./mygithub markuman ~/GITHUB
 #	...
-#	$ ls myGITHUBfavs/
+#	$ ls ~GITHUB/
 #	aeolianine  arasbm  dac922     devsnd  elecay    hoytech     kaosat-dev  lukasepple  silentbicycle  stetro    waalt    yexiaobo-seeedstudio
 #	alabid      bartaz  dantswain  Dmytry  fguillot  irungentoo  kcuzner     priyadi     sn0opy         thliebig  xmarcux  yui
 #
@@ -47,6 +17,35 @@
 #
 
 set -e
+
+function single_git(){
+
+	filename="$tmpdir"/gits.url
+	while read -r line
+	do
+	    name=$line
+
+	    # if github repository folder don't exist -> clone
+	    if [ ! -d "$destdir$name" ]; then
+   	    	echo -e "\n\n Start cloning $name \n"
+	    	git clone --recursive https://github.com"$name".git "$destdir$name"
+	    # if folder already exist -> pull
+	    else 
+		printf "\n\n Pull %s\n" "$name"
+		cd "$destdir$name" && git pull
+		cd "$currentdir"
+	    fi
+	done < "$filename"
+
+}
+
+#function parallel_git (){
+#
+# TODO: parallel clone/pull
+#
+#}
+
+
 
 if (("$#" < 2)); then
 	echo -e "Error: At least 2 arguments are needed. Your Github-Username and a destination dir.\n"
@@ -56,54 +55,39 @@ else
 	# where am i?
 	currentdir=$(pwd)
 	# create temporary dir
-	tmpdir=$(mktemp -dt)
+	tmpdir=$(mktemp -d --t)
 
 	# username + destination dir.
 	githubuser=$1
 	destdir=$2
 
 	# destdir check
-	if [ ! -d $destdir ]; then
-		mkdir -p $destdir
+	if [ ! -d "$destdir" ]; then
+		mkdir -p "$destdir"
 	fi
 
 	echo "Using tmpdir $tmpdir"
 	# get the source...
 	if (("$#" == 3)); then
 		if [[ "$3" = "justme" ]]; then
-			wget -qP $tmpdir https://github.com/$githubuser?tab=repositories
-			sed -n "/<h3 class=\"repolist-name\">/,/h3>/"p $tmpdir/$githubuser\?tab\=repositories >> $tmpdir/gits.raw
-			grep -o -E 'href="([^"#]+)"' $tmpdir/gits.raw | cut -d'"' -f2 > $tmpdir/gits.url
+			wget -qP "$tmpdir" https://github.com/"$githubuser"?tab=repositories
+			sed -n "/<h3 class=\"repolist-name\">/,/h3>/"p "$tmpdir"/"$githubuser"\?tab\=repositories >> "$tmpdir"/gits.raw
+			grep -o -E 'href="([^"#]+)"' "$tmpdir"/gits.raw | cut -d'"' -f2 > "$tmpdir"/gits.url
 		else
 			echo -e "\nError: Unknown third option!\n"
-			rmdir $tmpdir
+			rmdir "$tmpdir"
 			exit 1
 		fi
 	else
-		wget -qP $tmpdir https://github.com/stars/$githubuser/
-		wget -qP $tmpdir https://github.com/$githubuser?tab=repositories
-		grep "<h3>" $tmpdir/index.html > $tmpdir/gits.raw
-		sed -n "/<h3 class=\"repolist-name\">/,/h3>/"p $tmpdir/$githubuser\?tab\=repositories >> $tmpdir/gits.raw
-		grep -o -E 'href="([^"#]+)"' $tmpdir/gits.raw | cut -d'"' -f2 > $tmpdir/gits.url
+		wget -qP "$tmpdir" https://github.com/stars/"$githubuser"/
+		wget -qP "$tmpdir" https://github.com/"$githubuser"?tab=repositories
+		grep "<h3>" "$tmpdir"/index.html > "$tmpdir"/gits.raw
+		sed -n "/<h3 class=\"repolist-name\">/,/h3>/"p "$tmpdir"/"$githubuser"\?tab\=repositories >> "$tmpdir"/gits.raw
+		grep -o -E 'href="([^"#]+)"' "$tmpdir"/gits.raw | cut -d'"' -f2 > "$tmpdir"/gits.url
 	fi
 
-	filename=$tmpdir/gits.url
-	while read -r line
-	do
-	    name=$line
-
-	    # if github repository folder don't exist -> clone
-	    if [ ! -d $destdir$name ]; then
-   	    	echo -e "\n\n Start cloning $name \n"
-	    	git clone --recursive https://github.com$name.git $destdir$name
-	    # if folder already exist -> pull
-	    else 
-		echo -e "\n\n Pull $name \n"
-		cd $destdir$name && git pull
-		cd $currentdir
-	    fi
-	done < "$filename"
-
+	single_git "$@"
+	
 	# delete tmpdir
-	rm -r $tmpdir
+	rm -r "$tmpdir"
 fi
