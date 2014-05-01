@@ -55,7 +55,7 @@ else
 	# where am i?
 	currentdir=$(pwd)
 	# create temporary dir
-	tmpdir=$(mktemp -d --t)
+	tmpdir=$(mktemp -d /tmp/mygithub.XXXXXX)
 
 	# username + destination dir.
 	githubuser=$1
