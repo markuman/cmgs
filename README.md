@@ -3,6 +3,18 @@ mygithub
 
 mygithub helps you to clone and keep sync all you own repositories and all your stared repositories.
 
+- Version 9
+ * fix MAC OS mktemp again
+ * fix [SC2089](https://github.com/koalaman/shellcheck/wiki/SC2086)
+ * prepare for parallel pull/clone
+ * remove version changelog from script itself
+
+- Version 8
+ * MAC OS compatible mktemp -dt option
+
+- Version 7
+ * clone -recursive by default
+
 - Verion 6
  * improve third option input. it's set to "justme" now.
 
