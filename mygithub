@@ -1,5 +1,8 @@
 #!/bin/bash
 #
+# Version 8
+# - MAC OS compatible mktemp -dt option
+#
 # Version 7
 # - clone -recursive by default
 #
@@ -53,7 +56,7 @@ else
 	# where am i?
 	currentdir=$(pwd)
 	# create temporary dir
-	tmpdir=$(mktemp -d)
+	tmpdir=$(mktemp -dt)
 
 	# username + destination dir.
 	githubuser=$1
